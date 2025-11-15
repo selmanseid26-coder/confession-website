@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Open Letter</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#ff6b81;--muted:#94a3b8}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{display:grid;place-items:center;background:linear-gradient(180deg,#071122 0%, #07192b 100%);color:#e6eef8}
+    .card{width:min(760px,94vw);background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(2,6,23,0.6);}
+    h1{margin:0 0 8px;font-size:28px;letter-spacing:-0.4px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    .fields{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    input{flex:1;min-width:160px;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    button.primary{background:var(--accent);border:none;padding:10px 16px;border-radius:10px;color:white;font-weight:600;cursor:pointer}
+    .row{display:flex;gap:8px}
+    .letter{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:18px;border-radius:12px;min-height:180px;display:flex;align-items:center;justify-content:center}
+    .message{max-width:100%;white-space:pre-wrap;font-size:18px;line-height:1.5}
+    .small{font-size:13px;color:var(--muted);margin-top:10px}
+    a.link{color:var(--accent);text-decoration:none}
+    footer{margin-top:12px;color:var(--muted);font-size:13px}
+    .center{display:flex;gap:8px;align-items:center}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Open Letter</h1>
+    <p class="lead">Type a short message, or prefill via URL like <code>?to=HerName&from=You&msg=I+like+you</code>.</p>
+
+    <div class="fields">
+      <input id="to" placeholder="Her name (To)" />
+      <input id="from" placeholder="Your name (From)" />
+    </div>
+    <div style="margin-bottom:12px">
+      <input id="msg" placeholder="Write a short message..." />
+    </div>
+
+    <div class="row" style="margin-bottom:12px">
+      <button class="primary" id="reveal">Reveal the Letter</button>
+      <button id="copyLink">Copy shareable link</button>
+      <button id="reset">Reset</button>
+    </div>
+
+    <div class="letter" id="letter">
+      <div class="message" id="message">Click "Reveal the Letter" to show your message.</div>
+    </div>
+
+    <div class="small">Tip: to send as a link fill the fields and click "Copy shareable link", then paste the URL into a message.</div>
+    <footer>Made with ❤️ — keep it sincere.</footer>
+  </div>
+
+  <script>
+    // helpers
+    const el = id => document.getElementById(id);
+    const params = new URLSearchParams(location.search);
+
+    // read query params to prefill
+    const preTo = params.get('to') ? decodeURIComponent(params.get('to')) : '';
+    const preFrom = params.get('from') ? decodeURIComponent(params.get('from')) : '';
+    const preMsg = params.get('msg') ? decodeURIComponent(params.get('msg')) : '';
+    if(preTo) el('to').value = preTo;
+    if(preFrom) el('from').value = preFrom;
+    if(preMsg) el('msg').value = preMsg.replace(/\+/g,' ');
+
+    function typeWrite(text, target){
+      target.textContent = '';
+      let i=0; const t = setInterval(()=>{
+        target.textContent += text[i++]||'';
+        if(i>text.length) clearInterval(t);
+      }, 18);
+    }
+
+    function buildLetter(){
+      const to = el('to').value.trim() || 'Dear';
+      const from = el('from').value.trim() || '';
+      const msg = el('msg').value.trim() || 'I like you. Would you like to go out with me?';
+      const body = `${to},\n\n${msg}\n\n` + (from? `— ${from}` : '');
+      return body;
+    }
+
+    el('reveal').addEventListener('click', ()=>{
+      const text = buildLetter();
+      typeWrite(text, el('message'));
+    });
+
+    el('reset').addEventListener('click', ()=>{
+      el('to').value=''; el('from').value=''; el('msg').value=''; el('message').textContent='Click "Reveal the Letter" to show your message.';
+    });
+
+    el('copyLink').addEventListener('click', ()=>{
+      const to = encodeURIComponent(el('to').value.trim());
+      const from = encodeURIComponent(el('from').value.trim());
+      const msg = encodeURIComponent(el('msg').value.trim());
+      const url = location.origin + location.pathname + `?to=${to}&from=${from}&msg=${msg}`;
+      navigator.clipboard.writeText(url).then(()=>{
+        el('copyLink').textContent = 'Link copied!';
+        setTimeout(()=> el('copyLink').textContent = 'Copy shareable link', 2000);
+      }).catch(()=> alert('Copy failed — select and copy the URL manually: ' + url));
+    });
+  </script>
+</body>
+</html>
